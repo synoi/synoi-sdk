@@ -1,0 +1,27 @@
+{
+  "name": "@synoi/sdk",
+  "version": "0.1.0",
+  "description": "One-line HITL governance for any AI agent. Wraps a tool call through the SynOI gateway: license validation, risk-policy evaluation, HITL approval dispatch, signed Decision Receipt.",
+  "license": "Apache-2.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "commonjs",
+  "scripts": {
+    "build": "tsc",
+    "test": "tsx test/test-sdk.ts && tsx test/test-sdk-polling.ts && tsx test/test-sdk-local-mode.ts && tsx test/test-sdk-local-mode-v11.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "files": ["dist", "README.md"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/synoi/synoi-sdk.git"
+  },
+  "bugs": "https://github.com/synoi/synoi-sdk/issues",
+  "homepage": "https://synoi.systems",
+  "keywords": ["synoi", "hitl", "agent", "governance", "approval", "ai"],
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.4.0"
+  }
+}
