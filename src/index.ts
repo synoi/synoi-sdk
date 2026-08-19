@@ -59,6 +59,10 @@ export interface GateContext {
   call_id?:      string
   /** Optional: session id for grouping receipts. */
   session_id?:   string
+  /** Optional: GAP intent_oid correlating this call to the prompt/turn that
+   *  caused it. Format `sha256:<64 hex>`. Threaded onto the receipt's
+   *  authority block by the gateway; malformed values are rejected there. */
+  intent_oid?:   string
 }
 
 export interface RiskDecision {
@@ -376,6 +380,8 @@ export async function decide(ctx: GateContext, cfg: SynoiConfig = {}, dispatch =
         tool_input:   ctx.tool_input,
         user_message: ctx.user_message,
         model:        ctx.model,
+        session_id:   ctx.session_id,
+        intent_oid:   ctx.intent_oid,
       }),
     })
   } catch (err) {
