@@ -1,8 +1,11 @@
 name: Publish @synoi/sdk (npm)
 
+# FROZEN 2026-09-23. This package is published and is deliberately held at its
+# current version while SynOI moves to a commercial model. Publishing on a
+# version tag is removed so a routine release tag cannot ship a new public
+# version by accident. workflow_dispatch is kept so a deliberate, human
+# publish is still possible.
 on:
-  push:
-    tags: ['v*.*.*']
   workflow_dispatch:
     inputs:
       tag:
