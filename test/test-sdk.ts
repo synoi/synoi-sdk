@@ -10,7 +10,9 @@
  *   7. wrap() decorator produces a callable that mirrors the underlying fn
  *   8. Missing license key in permissive → allow with warning
  *   9. Missing license key in strict → throws
- *  10. The gateway request shape carries Bearer + tool_name + tool_input
+ *  10. The gateway request shape carries Bearer + tool_name + tool_input,
+ *      and has no intent_oid / session_id keys when they are unset
+ *  11. intent_oid (and session_id) travel as their own top-level body fields
  */
 
 import { gate, decide, wrap, SynoiDeniedError, SynoiGatewayError } from '../src/index'
@@ -146,6 +148,30 @@ async function main(): Promise<void> {
     assert(body.tool_input.command === 'rm -rf /tmp',                      'shape: tool_input forwarded')
     assert(body.user_message === 'clean up',                               'shape: user_message forwarded')
     assert(body.model === 'claude-opus-4-7',                               'shape: model forwarded')
+    // Absent correlation fields: the key is not on the wire at all, so callers
+    // that never set them send exactly the pre-intent_oid body.
+    assert(!('intent_oid' in body),                                        'shape: intent_oid key absent when unset')
+    assert(!('session_id' in body),                                        'shape: session_id key absent when unset')
+    assert(JSON.stringify(Object.keys(body).sort()) ===
+           JSON.stringify(['model', 'tool_input', 'tool_name', 'user_message']),
+                                                                           'shape: unset body has only the pre-existing keys')
+  }
+
+  // ── 11. intent_oid travels as its own top-level field ────────────────────
+  {
+    const oid = 'sha256:' + 'ab'.repeat(32)
+    const { fetch: f, calls } = makeFetchStub(() => jsonResp({ action: 'allow', reason: 'ok' }))
+    await decide({ tool_name: 'shell.exec', tool_input: { command: 'ls' }, user_message: 'list',
+                   intent_oid: oid, session_id: 'sess-1' }, { ...baseCfg, fetcher: f })
+    const body = JSON.parse(String(calls[0]!.init.body))
+    assert(body.intent_oid === oid,                                        'intent: intent_oid is its own body field')
+    assert(body.user_message === 'list',                                   'intent: user_message not altered by intent_oid')
+    assert(body.session_id === 'sess-1',                                   'intent: session_id is its own body field')
+
+    // gate() in gateway mode carries it too (same decide() path).
+    const g = makeFetchStub(() => jsonResp({ action: 'allow', reason: 'ok' }))
+    await gate({ tool_name: 't', tool_input: {}, intent_oid: oid }, () => 1, { ...baseCfg, fetcher: g.fetch })
+    assert(JSON.parse(String(g.calls[0]!.init.body)).intent_oid === oid,   'intent: gate() forwards intent_oid')
   }
 
   console.log('\nAll @synoi/sdk tests passed.')
