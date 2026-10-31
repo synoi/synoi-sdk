@@ -57,11 +57,17 @@ export interface GateContext {
   model?:        string
   /** Optional: stable id for this invocation. Auto-generated if missing. */
   call_id?:      string
-  /** Optional: session id for grouping receipts. */
+  /** Optional: session id for grouping receipts. Sent by decide() as its own
+   *  top-level `session_id` body field; omitted from the body when undefined. */
   session_id?:   string
   /** Optional: GAP intent_oid correlating this call to the prompt/turn that
-   *  caused it. Format `sha256:<64 hex>`. Threaded onto the receipt's
-   *  authority block by the gateway; malformed values are rejected there. */
+   *  caused it. Format `sha256:<64 lowercase hex>`. decide() sends it to
+   *  /v1/risk/evaluate as its own top-level `intent_oid` body field (never
+   *  folded into user_message) and omits the key entirely when undefined, so
+   *  callers that do not set it send the same body as before. The SDK does not
+   *  validate the format: the gateway rejects a present-but-malformed value
+   *  with HTTP 400, and threads a valid one onto the receipt's authority block.
+   *  Not sent on the local-daemon gate() path. */
   intent_oid?:   string
 }
 

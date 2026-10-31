@@ -91,6 +91,17 @@ switch (action) {
 }
 ```
 
+## Correlation fields
+
+The context passed to `decide()` and `gate()` (gateway mode; `wrap()` does not expose them, and the local-daemon path does not send them) can carry two optional context fields, each sent to `/v1/risk/evaluate` as its own top-level body field and left out of the body entirely when not set:
+
+- `session_id`: free-form agent session id, for grouping receipts.
+- `intent_oid`: the GAP intent OID (`sha256:<64 lowercase hex>`) of the prompt or turn that caused the call. The gateway records it on the signed receipt and rejects a malformed value with HTTP 400; the SDK passes it through unvalidated.
+
+```typescript
+await decide({ tool_name: 'shell.exec', tool_input: { command: 'ls' }, intent_oid: 'sha256:<64 hex>' })
+```
+
 ## Why this exists
 
 The drop-in proxy (just change `OPENAI_BASE_URL`) handles caching, cost, audit on **LLM calls**. It can't see **tool calls** unless the agent runtime opts in. This SDK is that opt-in — one wrapper around your tool dispatcher, and now every tool action is governed.
