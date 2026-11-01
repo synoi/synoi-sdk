@@ -63,7 +63,8 @@ export function frozenInfo(decision: unknown): FrozenInfo | null {
       actor_name:        k.actor_name ?? null,
       reason:            k.reason,
       frozen_at:         k.frozen_at,
-      expires_at:        k.expires_at ?? null,
+      // F1: keep "absent" distinct from null (= until lifted).
+      expires_at:        k.expires_at,
       freeze_id:         k.freeze_id,
       freeze_receipt_id: k.freeze_receipt_id ?? null,
       unreadable:        k.unreadable === true,
@@ -76,12 +77,20 @@ export function frozenInfo(decision: unknown): FrozenInfo | null {
   return null
 }
 
-/** "SynOI: agent frozen by <actor>: <reason>", the wording every surface uses. */
+/**
+ * "SynOI: agent frozen by <actor>: <reason> until <ISO time>", the wording
+ * every surface uses. F1: expires_at null reads "until lifted" (the gateway
+ * defaults to a 24 h expiry); an older gateway that sends no expires_at gets
+ * no suffix.
+ */
 export function frozenMessage(info: FrozenInfo, fallbackReason?: string): string {
   if (info.unreadable) return 'SynOI: kill switch state could not be read; failing closed'
   const who = info.actor_name ? `${info.actor_name} (${info.actor})` : (info.actor ?? 'an operator')
   const why = info.reason ?? fallbackReason ?? 'no reason given'
-  return `SynOI: agent frozen by ${who}: ${why}`
+  const until = typeof info.expires_at === 'number' && Number.isFinite(info.expires_at)
+    ? ` until ${new Date(info.expires_at).toISOString()}`
+    : info.expires_at === null ? ' until lifted' : ''
+  return `SynOI: agent frozen by ${who}: ${why}${until}`
 }
 
 /** Thrown instead of SynoiDeniedError when the denial is a freeze. Never retry it. */
