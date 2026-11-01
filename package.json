@@ -8,7 +8,7 @@
   "type": "commonjs",
   "scripts": {
     "build": "tsc",
-    "test": "tsx test/test-sdk.ts && tsx test/test-sdk-polling.ts && tsx test/test-sdk-local-mode.ts && tsx test/test-sdk-local-mode-v11.ts && tsx test/test-sdk-frozen.ts",
+    "test": "tsx test/test-sdk.ts && tsx test/test-sdk-polling.ts && tsx test/test-sdk-local-mode.ts && tsx test/test-sdk-local-mode-v11.ts && tsx test/test-sdk-frozen.ts && tsx test/test-sdk-frozen-expiry.ts",
     "typecheck": "tsc --noEmit"
   },
   "files": ["dist", "README.md"],
